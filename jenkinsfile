@@ -1,0 +1,42 @@
+pipeline {
+    agent any
+    environment {
+        DOCKER_IMAGE = 'ruddha/login:latest'
+    }
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git 'https://github.com/akulkarni63/Raj.git'  // Correct git clone step
+            }
+        }
+        
+        stage('Test Docker') {
+            steps {
+                sh 'docker --version'  // Check Docker version
+            }
+        }
+        
+        stage('Build Docker') {
+            steps {
+                sh 'docker build -t $DOCKER_IMAGE .'  // Build Docker image (with build context '.')
+            }
+        }
+        
+        stage('Run App') {
+            steps {
+                sh 'docker run -d -p 8081:80 $DOCKER_IMAGE'  // Run the Docker container
+            }
+        }
+        
+        stage('Docker Login & Push') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: 'docker-hub') {  // Use stored Docker Hub credentials
+                        sh 'docker push $DOCKER_IMAGE'  // Push Docker image to Docker Hub
+                    }
+                }
+            }
+        }
+    }
+}
+
